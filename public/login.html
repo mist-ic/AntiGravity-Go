@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <title>Antigravity-GO — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background: #0a0a0f;
+            color: #e8e8f0;
+            height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .login-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .login-subtitle {
+            font-size: 13px;
+            color: #55556a;
+            margin-bottom: 32px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #12121a;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            color: #e8e8f0;
+            font-family: inherit;
+            font-size: 15px;
+            outline: none;
+            transition: 0.25s;
+        }
+
+        .login-input:focus {
+            border-color: rgba(130, 100, 255, 0.4);
+            box-shadow: 0 0 0 3px rgba(130, 100, 255, 0.15);
+        }
+
+        .login-input::placeholder {
+            color: #55556a;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #8264ff;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .login-btn:hover {
+            filter: brightness(1.15);
+        }
+
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .login-error {
+            font-size: 13px;
+            color: #f87171;
+            min-height: 20px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-card">
+        <div class="login-logo">🔐</div>
+        <h1 class="login-title">AGGO</h1>
+        <p class="login-subtitle">Enter your password to continue</p>
+
+        <form class="login-form" id="loginForm">
+            <input class="login-input" type="password" id="password" placeholder="Password"
+                autocomplete="current-password" autofocus />
+            <button class="login-btn" type="submit" id="loginBtn">Sign In</button>
+            <div class="login-error" id="errorMsg"></div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const password = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.textContent = '';
+            loginBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: password.value })
+                });
+
+                if (res.ok) {
+                    window.location.href = '/';
+                } else {
+                    const data = await res.json();
+                    errorMsg.textContent = data.error || 'Wrong password';
+                    password.value = '';
+                    password.focus();
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Connection error';
+            } finally {
+                loginBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

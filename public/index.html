@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Antigravity-GO</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════ DESIGN SYSTEM ═══════════════════ */
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a26;
+      --bg-elevated: #22223a;
+      --bg-glass: rgba(30, 30, 50, 0.65);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-active: rgba(130, 100, 255, 0.4);
+      --text-primary: #e8e8f0;
+      --text-secondary: #8888a8;
+      --text-muted: #55556a;
+      --accent: #8264ff;
+      --accent-dim: rgba(130, 100, 255, 0.15);
+      --accent-glow: rgba(130, 100, 255, 0.35);
+      --green: #34d399;
+      --green-dim: rgba(52, 211, 153, 0.15);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.15);
+      --orange: #fbbf24;
+      --orange-dim: rgba(251, 191, 36, 0.15);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100dvh;
+      width: 100vw;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════ APP SHELL ═══════════════════ */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      padding-top: var(--safe-top);
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      z-index: 50;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.3px;
+    }
+
+    .header-logo .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      transition: var(--transition);
+    }
+
+    .header-logo .dot.connected {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .header-title {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .header-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 16px;
+    }
+
+    .header-btn:hover {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    .header-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* ─── QUOTA BAR ─── */
+    .quota-bar {
+      flex-shrink: 0;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.35s ease, opacity 0.3s ease;
+      opacity: 0;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .quota-bar.visible {
+      max-height: 200px;
+      opacity: 1;
+    }
+
+    .quota-inner {
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quota-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+    }
+
+    .quota-pill .bar {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--bg-elevated);
+      overflow: hidden;
+    }
+
+    .quota-pill .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .bar-fill.green {
+      background: var(--green);
+    }
+
+    .bar-fill.orange {
+      background: var(--orange);
+    }
+
+    .bar-fill.red {
+      background: var(--red);
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .main-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ─── TAB PANELS ─── */
+    .tab-panel {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .tab-panel.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ─── CHAT VIEWPORT ─── */
+    #chat-viewport {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 4px 120px;
+      scroll-behavior: smooth;
+    }
+
+    #chat-viewport * {
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* Make remote code blocks scrollable */
+    #chat-viewport pre {
+      overflow-x: auto !important;
+      max-width: 100% !important;
+      font-size: 12px !important;
+    }
+
+    #chat-viewport img {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    /* Style remote clickable elements */
+    #chat-viewport [data-cdp-click] {
+      cursor: pointer !important;
+      outline: 2px dashed var(--accent-glow) !important;
+      outline-offset: 2px;
+      border-radius: 4px;
+      transition: outline-color 0.2s;
+    }
+
+    #chat-viewport [data-cdp-click]:hover {
+      outline-color: var(--accent) !important;
+    }
+
+    #chat-viewport [data-cdp-click]:active {
+      outline-color: var(--green) !important;
+      transform: scale(0.98);
+    }
+
+    /* ─── CHAT INPUT ─── */
+    .chat-input-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      padding-bottom: calc(12px + var(--safe-bottom));
+      background: linear-gradient(to top, var(--bg-primary) 60%, transparent);
+      z-index: 20;
+    }
+
+    .chat-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px;
+      transition: border-color var(--transition);
+    }
+
+    .chat-input-wrap:focus-within {
+      border-color: var(--border-active);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .chat-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 12px;
+      outline: none;
+      resize: none;
+      min-height: 20px;
+      max-height: 120px;
+    }
+
+    .chat-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: var(--accent);
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      filter: brightness(1.15);
+    }
+
+    .send-btn:active {
+      transform: scale(0.92);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ─── SETTINGS PANEL ─── */
+    .settings-panel {
+      height: 100%;
+      overflow-y: auto;
+      padding: 20px 16px 100px;
+    }
+
+    .settings-section {
+      margin-bottom: 24px;
+    }
+
+    .settings-section h3 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .setting-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+
+    .setting-item .label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .setting-item .sublabel {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .setting-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .setting-btn.primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .setting-btn.primary:hover {
+      filter: brightness(1.15);
+    }
+
+    .setting-btn.danger {
+      background: var(--red-dim);
+      color: var(--red);
+    }
+
+    .setting-btn.danger:hover {
+      background: var(--red);
+      color: white;
+    }
+
+    .setting-btn.success {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .setting-btn.success:hover {
+      background: var(--green);
+      color: white;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      width: 44px;
+      height: 24px;
+      background: var(--bg-elevated);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+    }
+
+    .toggle.on {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      transition: var(--transition);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .toggle.on::after {
+      left: 22px;
+    }
+
+    /* ─── BOTTOM NAV ─── */
+    .bottom-nav {
+      flex-shrink: 0;
+      display: flex;
+      background: var(--bg-glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
+      z-index: 50;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .nav-item .icon {
+      font-size: 20px;
+      transition: var(--transition);
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 0 0 2px 2px;
+    }
+
+    .nav-item:active {
+      transform: scale(0.92);
+    }
+
+    /* ─── TOAST NOTIFICATIONS ─── */
+    .toast-container {
+      position: fixed;
+      top: calc(var(--safe-top) + 60px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      pointer-events: auto;
+      animation: toast-in 0.3s ease, toast-out 0.3s ease 2.7s forwards;
+      white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .toast.success {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .toast.error {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes toast-out {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+    }
+
+    /* ─── DISCONNECTED OVERLAY ─── */
+    .disconnected-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: var(--bg-primary);
+      z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+
+    .disconnected-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .pulse-ring {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid var(--text-muted);
+      animation: pulse-ring 2s ease-out infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.8);
+        opacity: 0.6;
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 0.2;
+      }
+
+      100% {
+        transform: scale(0.8);
+        opacity: 0.6;
+      }
+    }
+
+    .disconnected-text {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-elevated);
+      border-radius: 2px;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (min-width: 768px) {
+      .app {
+        max-width: 480px;
+        margin: 0 auto;
+        border-left: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-logo">
+        <span class="dot" id="statusDot"></span>
+        <span>AG Chat</span>
+      </div>
+      <span class="header-title" id="headerTitle">Connecting...</span>
+      <div class="header-actions">
+        <button class="header-btn" id="btnQuota" title="Quota">📊</button>
+        <button class="header-btn" id="btnNewChat" title="New Chat">✨</button>
+        <button class="header-btn" id="btnScrollBottom" title="Scroll to bottom">⬇</button>
+      </div>
+    </header>
+
+    <!-- QUOTA BAR -->
+    <div class="quota-bar" id="quotaBar">
+      <div class="quota-inner" id="quotaInner"></div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- Chat Tab -->
+      <div class="tab-panel active" id="tabChat">
+        <div id="chat-viewport"></div>
+        <div class="disconnected-overlay" id="disconnectedOverlay">
+          <div class="pulse-ring"></div>
+          <div class="disconnected-text">Searching for Antigravity...</div>
+          <button class="setting-btn success" id="btnLaunchFromOverlay" style="margin-top: 8px;">🚀 Launch
+            Antigravity</button>
+        </div>
+        <div class="chat-input-container">
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chatInput" placeholder="Send a message..." rows="1"></textarea>
+            <button class="send-btn" id="sendBtn" title="Send">↑</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div class="tab-panel" id="tabSettings">
+        <div class="settings-panel">
+          <div class="settings-section">
+            <h3>Connection</h3>
+            <div class="setting-card">
+              <div class="setting-item">
+                <div>
+                  <div class="label">Status</div>
+                  <div class="sublabel" id="connectionStatus">Disconnected</div>
+                </div>
+                <div class="dot" id="settingsDot" style="width: 10px; height: 10px; border-radius: 50%;"></div>
+              </div>
+              <div class="setting-item">
+                <div>
+                  <div class="label">Launch Antigravity</div>
+                  <div class="sublabel">Start with CDP enabled</div>
+                </div>
+                <button class="setting-btn success" id="btnLaunch">🚀 Launch</button>
+              </div>
+              <div class="setting-item">
+                <div>
+                  <div class="label">Kill All</div>
+                  <div class="sublabel">Stop all Antigravity processes</div>
+                </div>
+                <button class="setting-btn danger" id="btnKill">💀 Kill</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Notifications</h3>
+            <div class="setting-card">
+              <div class="setting-item">
+                <div>
+                  <div class="label">Push Notifications</div>
+                  <div class="sublabel">Get notified when AI is done</div>
+                </div>
+                <div class="toggle" id="togglePush"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Display</h3>
+            <div class="setting-card">
+              <div class="setting-item">
+                <div>
+                  <div class="label">Auto-Scroll</div>
+                  <div class="sublabel">Follow new messages</div>
+                </div>
+                <div class="toggle on" id="toggleAutoScroll"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section" id="authSection" style="display: none;">
+            <h3>Account</h3>
+            <div class="setting-card">
+              <div class="setting-item">
+                <div>
+                  <div class="label">Logout</div>
+                  <div class="sublabel">Clear authentication</div>
+                </div>
+                <button class="setting-btn danger" id="btnLogout">🚪 Logout</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>About</h3>
+            <div class="setting-card">
+              <div class="setting-item">
+                <div>
+                  <div class="label">Antigravity-GO</div>
+                  <div class="sublabel">v1.0.0 • Made with spite</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="tabChat">
+        <span class="icon">💬</span>
+        <span>Chat</span>
+      </button>
+      <button class="nav-item" data-tab="tabSettings">
+        <span class="icon">⚙️</span>
+        <span>Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ═══════════════════ APP STATE ═══════════════════
+    const state = {
+      connected: false,
+      autoScroll: true,
+      pushEnabled: false,
+      quotaVisible: false,
+      currentCSS: null,
+      wsReconnectDelay: 1000
+    };
+
+    // ═══════════════════ DOM REFS ═══════════════════
+    const $ = (sel) => document.querySelector(sel);
+    const viewport = $('#chat-viewport');
+    const statusDot = $('#statusDot');
+    const settingsDot = $('#settingsDot');
+    const headerTitle = $('#headerTitle');
+    const disconnectedOverlay = $('#disconnectedOverlay');
+    const quotaBar = $('#quotaBar');
+    const quotaInner = $('#quotaInner');
+    const chatInput = $('#chatInput');
+    const sendBtn = $('#sendBtn');
+    const connectionStatus = $('#connectionStatus');
+
+    // ═══════════════════ WEBSOCKET ═══════════════════
+    let ws = null;
+
+    function wsConnect() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${location.host}`);
+
+      ws.onopen = () => {
+        state.wsReconnectDelay = 1000;
+        toast('Connected to server', 'success');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          handleMessage(msg);
+        } catch (_) { }
+      };
+
+      ws.onclose = () => {
+        setTimeout(wsConnect, state.wsReconnectDelay);
+        state.wsReconnectDelay = Math.min(state.wsReconnectDelay * 1.5, 10000);
+      };
+
+      ws.onerror = () => { };
+    }
+
+    function handleMessage(msg) {
+      switch (msg.type) {
+        case 'status':
+          updateConnectionStatus(msg.connected, msg.title);
+          break;
+
+        case 'snapshot':
+          renderSnapshot(msg);
+          break;
+      }
+    }
+
+    // ═══════════════════ CONNECTION STATUS ═══════════════════
+    function updateConnectionStatus(connected, title) {
+      state.connected = connected;
+      statusDot.className = `dot${connected ? ' connected' : ''}`;
+      settingsDot.style.background = connected ? 'var(--green)' : 'var(--red)';
+      headerTitle.textContent = connected ? (title || 'Antigravity') : 'Disconnected';
+      connectionStatus.textContent = connected ? 'Connected to Antigravity' : 'Waiting for CDP...';
+      disconnectedOverlay.classList.toggle('hidden', connected);
+    }
+
+    // ═══════════════════ SNAPSHOT RENDERING ═══════════════════
+    let styleTag = null;
+
+    function renderSnapshot(data) {
+      if (!data.html) return;
+
+      // Inject HTML
+      const wasAtBottom = isScrolledToBottom();
+      viewport.innerHTML = data.html;
+
+      // Apply background
+      if (data.bodyBg) {
+        viewport.style.background = data.bodyBg;
+      }
+
+      // Update CSS (only if changed — server sends null when unchanged)
+      if (data.css !== null && data.css !== undefined) {
+        if (!styleTag) {
+          styleTag = document.createElement('style');
+          styleTag.id = 'remote-css';
+          document.head.appendChild(styleTag);
+        }
+        styleTag.textContent = data.css;
+        state.currentCSS = data.css;
+      }
+
+      // Wire up click handlers on annotated elements
+      viewport.querySelectorAll('[data-cdp-click]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const index = parseInt(el.getAttribute('data-cdp-click'));
+          relayClick(index);
+        });
+      });
+
+      // Update quota
+      if (data.quota) {
+        renderQuota(data.quota);
+      }
+
+      // Auto-scroll
+      if (state.autoScroll && wasAtBottom) {
+        requestAnimationFrame(() => {
+          viewport.scrollTop = viewport.scrollHeight;
+        });
+      }
+    }
+
+    function isScrolledToBottom() {
+      return viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 50;
+    }
+
+    // ═══════════════════ QUOTA ═══════════════════
+    function renderQuota(data) {
+      if (!data?.models?.length) return;
+
+      quotaInner.innerHTML = data.models.map(m => {
+        const pct = m.percentage ?? 0;
+        const colorClass = pct > 80 ? 'red' : pct > 50 ? 'orange' : 'green';
+        return `
+          <div class="quota-pill">
+            <span>${m.label}</span>
+            <div class="bar"><div class="bar-fill ${colorClass}" style="width: ${pct}%"></div></div>
+            <span>${pct}%</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ═══════════════════ CLICK RELAY ═══════════════════
+    async function relayClick(index) {
+      try {
+        const res = await fetch(`/click/${index}`, { method: 'POST' });
+        const result = await res.json();
+        if (result.success) {
+          toast(`Clicked: ${result.text}`, 'success');
+        } else {
+          toast(result.error || 'Click failed', 'error');
+        }
+      } catch (err) {
+        toast('Click relay failed', 'error');
+      }
+    }
+
+    // ═══════════════════ SEND MESSAGE ═══════════════════
+    async function sendMessage() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      sendBtn.disabled = true;
+      try {
+        const res = await fetch('/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          chatInput.value = '';
+          chatInput.style.height = 'auto';
+          toast('Message sent', 'success');
+        } else {
+          toast(result.error || 'Send failed', 'error');
+        }
+      } catch (err) {
+        toast('Failed to send', 'error');
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    // Auto-grow textarea
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+    });
+
+    // Enter to send (Shift+Enter for newline)
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    // ═══════════════════ NAVIGATION ═══════════════════
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+
+        // Update nav active state
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Show/hide panels
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(tabId)?.classList.add('active');
+      });
+    });
+
+    // ═══════════════════ HEADER BUTTONS ═══════════════════
+    $('#btnQuota').addEventListener('click', () => {
+      state.quotaVisible = !state.quotaVisible;
+      quotaBar.classList.toggle('visible', state.quotaVisible);
+    });
+
+    $('#btnNewChat').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/new-chat', { method: 'POST' });
+        const result = await res.json();
+        toast(result.success ? 'New chat started' : (result.error || 'Failed'), result.success ? 'success' : 'error');
+      } catch (_) {
+        toast('Failed to start new chat', 'error');
+      }
+    });
+
+    $('#btnScrollBottom').addEventListener('click', () => {
+      viewport.scrollTop = viewport.scrollHeight;
+    });
+
+    // ═══════════════════ SETTINGS ACTIONS ═══════════════════
+    // Launch
+    async function launchAntigravity() {
+      toast('Launching Antigravity...', '');
+      try {
+        const res = await fetch('/api/launch', { method: 'POST' });
+        const result = await res.json();
+        toast(result.message || (result.success ? 'Launched!' : 'Failed'), result.success ? 'success' : 'error');
+      } catch (_) {
+        toast('Launch failed', 'error');
+      }
+    }
+
+    $('#btnLaunch').addEventListener('click', launchAntigravity);
+    $('#btnLaunchFromOverlay').addEventListener('click', launchAntigravity);
+
+    // Kill
+    $('#btnKill').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/kill', { method: 'POST' });
+        const result = await res.json();
+        toast(result.message || 'Done', 'success');
+      } catch (_) {
+        toast('Kill failed', 'error');
+      }
+    });
+
+    // Logout
+    $('#btnLogout').addEventListener('click', () => {
+      window.location.href = '/api/logout';
+    });
+
+    // Auto-scroll toggle
+    const toggleAutoScroll = $('#toggleAutoScroll');
+    toggleAutoScroll.addEventListener('click', () => {
+      state.autoScroll = !state.autoScroll;
+      toggleAutoScroll.classList.toggle('on', state.autoScroll);
+    });
+
+    // Push notifications toggle
+    const togglePush = $('#togglePush');
+    togglePush.addEventListener('click', async () => {
+      if (state.pushEnabled) {
+        // Unsubscribe
+        state.pushEnabled = false;
+        togglePush.classList.remove('on');
+        toast('Notifications disabled', '');
+        return;
+      }
+
+      try {
+        // Get VAPID public key
+        const keyRes = await fetch('/api/push/vapid-key');
+        const { publicKey } = await keyRes.json();
+        if (!publicKey) throw new Error('No VAPID key');
+
+        // Request notification permission
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          toast('Notification permission denied', 'error');
+          return;
+        }
+
+        // Register service worker & subscribe
+        const reg = await navigator.serviceWorker.ready;
+        const subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+
+        // Send subscription to server
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription)
+        });
+
+        state.pushEnabled = true;
+        togglePush.classList.add('on');
+        toast('Notifications enabled! 🔔', 'success');
+
+      } catch (err) {
+        toast('Failed to enable notifications', 'error');
+        console.error('Push subscription error:', err);
+      }
+    });
+
+    // ═══════════════════ PUSH HELPERS ═══════════════════
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    // ═══════════════════ TOAST ═══════════════════
+    function toast(message, type = '') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = message;
+      const container = $('#toastContainer');
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // ═══════════════════ INITIALIZATION ═══════════════════
+    async function init() {
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        try {
+          await navigator.serviceWorker.register('/sw.js');
+        } catch (err) {
+          console.warn('SW registration failed:', err);
+        }
+      }
+
+      // Check auth status
+      try {
+        const res = await fetch('/api/auth-status');
+        const data = await res.json();
+        if (data.authEnabled) {
+          document.getElementById('authSection').style.display = '';
+        }
+      } catch (_) { }
+
+      // Connect WebSocket
+      wsConnect();
+    }
+
+    init();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+{
+    "port": 6969,
+    "password": "",
+    "antigravityPath": "",
+    "cdpPorts": [
+        9000,
+        9001,
+        9002,
+        9003
+    ],
+    "snapshotIntervalMs": 2000,
+    "managerUrl": "",
+    "managerPassword": "",
+    "vapidSubject": "mailto:you@example.com",
+    "vapidPublicKey": "",
+    "vapidPrivateKey": ""
+}
