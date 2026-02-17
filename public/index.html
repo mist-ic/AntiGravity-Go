@@ -996,31 +996,23 @@
     }
 
     // ═══════════════════ SEND MESSAGE ═══════════════════
-    async function sendMessage() {
+    function sendMessage() {
       const text = chatInput.value.trim();
       if (!text) return;
 
-      sendBtn.disabled = true;
-      try {
-        const res = await fetch('/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
-        });
-        const result = await res.json();
-
-        if (result.success) {
-          chatInput.value = '';
-          chatInput.style.height = 'auto';
-          toast('Message sent', 'success');
-        } else {
-          toast(result.error || 'Send failed', 'error');
-        }
-      } catch (err) {
-        toast('Failed to send', 'error');
-      } finally {
-        sendBtn.disabled = false;
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        toast('Not connected', 'error');
+        return;
       }
+
+      sendBtn.disabled = true;
+      ws.send(JSON.stringify({ type: 'send', text }));
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+      toast('Message sent', 'success');
+
+      // Re-enable after a short delay
+      setTimeout(() => { sendBtn.disabled = false; }, 1500);
     }
 
     // Auto-grow textarea

@@ -368,6 +368,10 @@ async function snapshotLoop() {
     if (wss.clients.size === 0) return;
 
     try {
+        // Scroll desktop chat to bottom so virtualized list renders latest content
+        // (progress updates, tool calls, streaming text won't appear otherwise)
+        await snapshot.scrollChatToBottom(conn).catch(() => { });
+
         const [htmlData, cssData, quotaData] = await Promise.all([
             snapshot.captureHTML(conn).catch(() => null),
             snapshot.captureCSS(conn).catch(() => null),
