@@ -33,7 +33,7 @@ try {
         config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
         console.log('[Server] Created config.json from example — edit it to customize');
     } else {
-        config = { port: 6969, password: '', cdpPorts: [9000, 9001, 9002, 9003], snapshotIntervalMs: 2000 };
+        config = { port: 6969, password: '', cdpPorts: [9000, 9001, 9002, 9003], snapshotIntervalMs: 800 };
         console.log('[Server] Using default configuration');
     }
 }

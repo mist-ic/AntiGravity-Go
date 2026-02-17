@@ -956,7 +956,7 @@
       }
 
       requestAnimationFrame(() => {
-        if (wasAtBottom || state.autoScroll) {
+        if (wasAtBottom) {
           viewport.scrollTop = viewport.scrollHeight;
         }
       });
