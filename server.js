@@ -265,6 +265,13 @@ wss.on('connection', (ws, req) => {
                     }
                     break;
 
+                case 'scroll':
+                    if (msg.ratio != null) {
+                        const conn = getActiveConnection();
+                        if (conn) await snapshot.scrollChat(conn, msg.ratio);
+                    }
+                    break;
+
                 case 'new-chat':
                     const conn = getActiveConnection();
                     if (conn) await snapshot.newConversation(conn);
@@ -302,6 +309,9 @@ wss.on('close', () => clearInterval(heartbeatInterval));
 let snapshotInterval = null;
 let discoveryInterval = null;
 let lastCSSHash = '';
+let lastHTMLHash = '';
+let stableCount = 0;      // how many consecutive snapshots had the same HTML
+let wasChanging = false;  // true while content is actively changing
 
 /** Get best CDP connection — prefers main workbench (which contains the cascade iframe) */
 function getActiveConnection() {
@@ -368,10 +378,6 @@ async function snapshotLoop() {
     if (wss.clients.size === 0) return;
 
     try {
-        // Scroll desktop chat to bottom so virtualized list renders latest content
-        // (progress updates, tool calls, streaming text won't appear otherwise)
-        await snapshot.scrollChatToBottom(conn).catch(() => { });
-
         const [htmlData, cssData, quotaData] = await Promise.all([
             snapshot.captureHTML(conn).catch(() => null),
             snapshot.captureCSS(conn).catch(() => null),
@@ -389,6 +395,25 @@ async function snapshotLoop() {
             lastCSSHash = cssHash;
         }
 
+        // Detect if content is changing (for smart auto-scroll)
+        const htmlHash = simpleHash(htmlData.html || '');
+        if (htmlHash !== lastHTMLHash) {
+            // Content changed — mark as actively changing
+            wasChanging = true;
+            stableCount = 0;
+            lastHTMLHash = htmlHash;
+        } else {
+            stableCount++;
+        }
+
+        // Auto-scroll desktop to bottom when response completes:
+        // Content was changing and has now been stable for 2+ cycles
+        const responseJustCompleted = wasChanging && stableCount >= 2;
+        if (responseJustCompleted) {
+            wasChanging = false;
+            await snapshot.scrollChatToBottom(conn).catch(() => { });
+        }
+
         // Broadcast to all connected browsers
         wsBroadcast({
             type: 'snapshot',
@@ -396,7 +421,8 @@ async function snapshotLoop() {
             bodyBg: htmlData.bodyBg || '#1a1a1a',
             clickMap: htmlData.clickMap || {},
             css: cssPayload,
-            quota: quotaData
+            quota: quotaData,
+            streaming: wasChanging  // tell phone if content is actively changing
         });
 
         // Check for AI completion (for push notifications)

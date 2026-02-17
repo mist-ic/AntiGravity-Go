@@ -916,6 +916,11 @@
         return;
       }
 
+      // === SMART SCROLL ===
+      // Only auto-scroll to bottom if user was already near the bottom
+      // (so they're "following" the conversation). Otherwise preserve position.
+      const wasAtBottom = isScrolledToBottom();
+
       // Inject HTML
       viewport.innerHTML = '<div class="rc">' + data.html + '</div>';
 
@@ -950,18 +955,31 @@
         renderQuota(data.quota);
       }
 
-      // === SCROLL: Always show latest messages ===
-      // Because Antigravity virtualizes the chat, we can only display
-      // what the desktop has rendered. Always scroll to bottom to show
-      // the latest messages (avoids getting stuck at grey placeholder boxes).
       requestAnimationFrame(() => {
-        viewport.scrollTop = viewport.scrollHeight;
+        if (wasAtBottom || state.autoScroll) {
+          viewport.scrollTop = viewport.scrollHeight;
+        }
       });
     }
 
     function isScrolledToBottom() {
       return viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 50;
     }
+
+    // === SCROLL SYNC: Phone → Desktop ===
+    // When user scrolls on phone, sync that position to the desktop
+    // so Antigravity's virtualized list renders that section.
+    let scrollSyncTimer = null;
+    viewport.addEventListener('scroll', () => {
+      if (scrollSyncTimer) clearTimeout(scrollSyncTimer);
+      scrollSyncTimer = setTimeout(() => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const maxScroll = viewport.scrollHeight - viewport.clientHeight;
+        if (maxScroll <= 0) return;
+        const ratio = viewport.scrollTop / maxScroll;
+        ws.send(JSON.stringify({ type: 'scroll', ratio }));
+      }, 150); // debounce: wait 150ms after scroll stops
+    });
 
     // ═══════════════════ QUOTA ═══════════════════
     function renderQuota(data) {
