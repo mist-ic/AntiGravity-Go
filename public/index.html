@@ -236,13 +236,39 @@
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
-      padding: 0 4px 120px;
+      padding: 0 4px 160px;
       scroll-behavior: smooth;
     }
 
     #chat-viewport * {
       max-width: 100% !important;
       box-sizing: border-box !important;
+    }
+
+    /* Force text visibility — Antigravity uses --vscode-* CSS vars that don't resolve here */
+    #chat-viewport .rc {
+      color: #d4d4d4 !important;
+    }
+
+    #chat-viewport .rc p,
+    #chat-viewport .rc span,
+    #chat-viewport .rc div,
+    #chat-viewport .rc li,
+    #chat-viewport .rc h1,
+    #chat-viewport .rc h2,
+    #chat-viewport .rc h3,
+    #chat-viewport .rc h4,
+    #chat-viewport .rc a,
+    #chat-viewport .rc td,
+    #chat-viewport .rc th,
+    #chat-viewport .rc label,
+    #chat-viewport .rc code {
+      color: inherit !important;
+    }
+
+    #chat-viewport .rc pre,
+    #chat-viewport .rc code {
+      color: #ce9178 !important;
     }
 
     /* Make remote code blocks scrollable */
@@ -283,7 +309,8 @@
       right: 0;
       padding: 12px 16px;
       padding-bottom: calc(12px + var(--safe-bottom));
-      background: linear-gradient(to top, var(--bg-primary) 60%, transparent);
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
       z-index: 20;
     }
 
@@ -670,7 +697,7 @@
     <header class="header">
       <div class="header-logo">
         <span class="dot" id="statusDot"></span>
-        <span>AG Chat</span>
+        <span>AGGO</span>
       </div>
       <span class="header-title" id="headerTitle">Connecting...</span>
       <div class="header-actions">
@@ -881,11 +908,16 @@
     let styleTag = null;
 
     function renderSnapshot(data) {
-      if (!data.html) return;
+      if (!data.html) {
+        // Show helpful placeholder when no chat is open
+        if (!viewport.querySelector('.no-chat-msg')) {
+          viewport.innerHTML = '<div class="no-chat-msg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);text-align:center;padding:2rem;gap:1rem;"><div style="font-size:2.5rem;">💬</div><div style="font-size:1.1rem;font-weight:500;">No chat open</div><div style="font-size:0.85rem;color:rgba(255,255,255,0.25);">Open a Cascade conversation in Antigravity to see it here</div></div>';
+        }
+        return;
+      }
 
       // Inject HTML
-      const wasAtBottom = isScrolledToBottom();
-      viewport.innerHTML = data.html;
+      viewport.innerHTML = '<div class="rc">' + data.html + '</div>';
 
       // Apply background
       if (data.bodyBg) {
@@ -918,12 +950,13 @@
         renderQuota(data.quota);
       }
 
-      // Auto-scroll
-      if (state.autoScroll && wasAtBottom) {
-        requestAnimationFrame(() => {
-          viewport.scrollTop = viewport.scrollHeight;
-        });
-      }
+      // === SCROLL: Always show latest messages ===
+      // Because Antigravity virtualizes the chat, we can only display
+      // what the desktop has rendered. Always scroll to bottom to show
+      // the latest messages (avoids getting stuck at grey placeholder boxes).
+      requestAnimationFrame(() => {
+        viewport.scrollTop = viewport.scrollHeight;
+      });
     }
 
     function isScrolledToBottom() {

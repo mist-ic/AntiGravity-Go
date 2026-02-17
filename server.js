@@ -106,6 +106,29 @@ app.get('/styles/antigravity.css', async (req, res) => {
     }
 });
 
+// DOM discovery (debug tool to find the right chat selector)
+app.get('/api/discover', async (req, res) => {
+    try {
+        const conn = getActiveConnection();
+        if (!conn) return res.status(503).json({ error: 'No CDP connection' });
+
+        const discovery = await snapshot.discoverDOM(conn);
+        res.json(discovery);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// List all CDP targets (debug tool)
+app.get('/api/targets', async (req, res) => {
+    try {
+        const targets = await cdp.discover(config.cdpPorts || [9000, 9001, 9002, 9003]);
+        res.json(targets);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Click relay
 app.post('/click/:index', async (req, res) => {
     try {
@@ -280,13 +303,24 @@ let snapshotInterval = null;
 let discoveryInterval = null;
 let lastCSSHash = '';
 
-/** Get first active CDP connection */
+/** Get best CDP connection — prefers main workbench (which contains the cascade iframe) */
 function getActiveConnection() {
     const connections = cdp.getConnections();
+    let fallback = null;
+
     for (const [, conn] of connections) {
-        if (conn.active && conn.ws?.readyState === WebSocket.OPEN) return conn;
+        if (!conn.active || conn.ws?.readyState !== WebSocket.OPEN) continue;
+
+        // Prefer the main workbench — the cascade chat lives in an iframe inside it
+        const title = (conn.title || '').toLowerCase();
+        if (title.includes('antigravity') || title.includes('walkthrough')) {
+            return conn;
+        }
+
+        if (!fallback) fallback = conn;
     }
-    return null;
+
+    return fallback;
 }
 
 /** Broadcast data to all WS clients */
@@ -341,6 +375,7 @@ async function snapshotLoop() {
         ]);
 
         if (!htmlData) return;
+
 
         // Only send CSS if it changed (to save bandwidth)
         let cssPayload = null;
